@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>IT Preventive Maintenance System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f6f9;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .success {
+      text-align: center;
+      color: green;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Preventive Maintenance Form</h2>
+
+  <form id="pmForm">
+    <input type="text" name="employee" placeholder="Employee Name" required>
+    <input type="text" name="department" placeholder="Department" required>
+
+    <select name="device">
+      <option>Desktop</option>
+      <option>Laptop</option>
+    </select>
+
+    <input type="text" name="assetTag" placeholder="Asset Tag">
+    <input type="text" name="serial" placeholder="Serial Number">
+
+    <select name="pmType">
+      <option>Quarterly</option>
+      <option>Semi-Annual</option>
+      <option>Annual</option>
+    </select>
+
+    <textarea name="findings" placeholder="Findings / Actions Taken"></textarea>
+
+    <select name="status">
+      <option>Good</option>
+      <option>For Repair</option>
+      <option>For Replacement</option>
+    </select>
+
+    <input type="text" name="technician" placeholder="Technician Name" required>
+
+    <button type="submit">Submit PM Record</button>
+  </form>
+
+  <div class="success" id="message"></div>
+</div>
+
+<script>
+document.getElementById("pmForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const formData = new FormData(this);
+  const data = Object.fromEntries(formData.entries());
+
+  fetch("https://script.google.com/macros/s/AKfycbwb0JPUoQz0zX6yPdsa3-8i7VyNlYocmkvVNP01TCK0TRJ15PhpXuZLBr20zjNTmTnlHA/exec", {
+    method: "POST",
+    body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(result => {
+    document.getElementById("message").innerText = "PM Record Submitted Successfully!";
+    document.getElementById("pmForm").reset();
+  })
+  .catch(error => {
+    alert("Error submitting form.");
+  });
+});
+</script>
+
+</body>
+</html>
