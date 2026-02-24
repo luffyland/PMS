@@ -93,7 +93,7 @@ document.getElementById("pmForm").addEventListener("submit", function(e) {
   const formData = new FormData(this);
   const data = Object.fromEntries(formData.entries());
 
-  fetch("https://script.google.com/macros/s/AKfycbwb0JPUoQz0zX6yPdsa3-8i7VyNlYocmkvVNP01TCK0TRJ15PhpXuZLBr20zjNTmTnlHA/exec", {
+  fetch("https://script.google.com/macros/s/AKfycbwediPDKWqwxsBz6yJPIZeABo2cB30nlepo5BvZVRvtczaAK_7SXuIlbaSylVlgdKMX/exec", {
     method: "POST",
     body: JSON.stringify(data)
   })
@@ -110,3 +110,4 @@ document.getElementById("pmForm").addEventListener("submit", function(e) {
 
 </body>
 </html>
+
