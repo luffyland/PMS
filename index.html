@@ -141,27 +141,25 @@ document.getElementById("pmForm").addEventListener("submit", function(e) {
   const formData = new FormData(this);
   const data = Object.fromEntries(formData.entries());
 
-  fetch("https://script.google.com/macros/s/AKfycbwzRMEDi-T0tItwunanqWG-vOoVmuBtfSssCnYzDLZWtvO0_tI7ShFWQN_io5UIDSIT3A/exec", {   // 🔴 PASTE YOUR /exec URL HERE
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(data)
-  })
-  .then(response => response.text())
-  .then(result => {
-    document.getElementById("message").innerText = "PMS Record Submitted Successfully!";
-    document.getElementById("pmForm").reset();
-  })
-  .catch(error => {
-    console.error(error);
-    alert("Submission Failed. Check deployment settings.");
-  });
+  fetch("https://script.google.com/macros/s/AKfycbxp2U4HlbLw3PC4GJ58ARJBRyPRC_UoA1kYr-bJtsKID4Q24SSVvzOTBn2lAKP9uYCQDQ/exec", {
+  method: "POST",
+  body: JSON.stringify(data)
+})
+.then(response => response.text())
+.then(result => {
+  document.getElementById("message").innerText = "PMS Record Submitted Successfully!";
+  document.getElementById("pmForm").reset();
+})
+.catch(error => {
+  console.error(error);
+  alert("Submission failed.");
+});
 });
 </script>
 
 </body>
 </html>
+
 
 
 
