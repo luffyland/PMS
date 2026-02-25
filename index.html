@@ -5,32 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       background: #f4f6f9;
       padding: 20px;
     }
     .container {
-      max-width: 600px;
+      max-width: 900px;
       margin: auto;
-      background: white;
+      background: #fff;
       padding: 25px;
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
     h2 {
       text-align: center;
+      margin-bottom: 20px;
     }
     input, select, textarea {
       width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      margin-bottom: 15px;
+      padding: 8px;
+      margin-bottom: 12px;
       border-radius: 5px;
       border: 1px solid #ccc;
     }
     button {
-      width: 100%;
       padding: 12px;
+      width: 100%;
       background: #007bff;
       color: white;
       border: none;
@@ -50,40 +50,88 @@
 <body>
 
 <div class="container">
-  <h2>Preventive Maintenance Form</h2>
+  <h2>Preventive Maintenance Service (PMS)</h2>
 
   <form id="pmForm">
-    <input type="text" name="employee" placeholder="Employee Name" required>
-    <input type="text" name="department" placeholder="Department" required>
 
-    <select name="device">
-      <option>Desktop</option>
+    <input type="text" name="fullName" placeholder="Full Name (F,L)" required>
+    <input type="text" name="unit" placeholder="Unit">
+    <input type="text" name="department" placeholder="Department">
+
+    <label>PMS Schedule Date</label>
+    <input type="date" name="scheduleDate">
+    <input type="time" name="scheduleTime">
+
+    <label>Reschedule Date</label>
+    <input type="date" name="rescheduleDate">
+    <input type="time" name="rescheduleTime">
+
+    <label>Date Performed</label>
+    <input type="date" name="datePerformed">
+
+    <input type="text" name="performedBy" placeholder="Performed By">
+
+    <select name="category">
       <option>Laptop</option>
+      <option>Desktop</option>
     </select>
 
-    <input type="text" name="assetTag" placeholder="Asset Tag">
-    <input type="text" name="serial" placeholder="Serial Number">
+    <input type="text" name="laptopModel" placeholder="Laptop Model">
+    <input type="text" name="serialNumber" placeholder="Serial Number">
+    <input type="text" name="motherboard" placeholder="Motherboard">
+    <input type="text" name="cpu" placeholder="CPU">
+    <input type="text" name="ram" placeholder="RAM / Speed">
+    <input type="text" name="storage" placeholder="SSD | HDD">
 
-    <select name="pmType">
-      <option>Quarterly</option>
-      <option>Semi-Annual</option>
-      <option>Annual</option>
+    <input type="text" name="batteryHealth" placeholder="Battery Health">
+    <input type="text" name="storageHealth" placeholder="Storage Health">
+
+    <select name="tempDeleted">
+      <option value="">Temp Files Deleted?</option>
+      <option>Yes</option>
+      <option>No</option>
     </select>
 
-    <textarea name="findings" placeholder="Findings / Actions Taken"></textarea>
+    <input type="text" name="anydesk" placeholder="AnyDesk ID">
+    <input type="text" name="ipAddress" placeholder="IP Address">
+    <input type="text" name="macAddress" placeholder="MAC Address">
 
-    <select name="status">
-      <option>Good</option>
-      <option>For Repair</option>
-      <option>For Replacement</option>
+    <input type="text" name="operatingSystem" placeholder="Operating System">
+
+    <select name="osRenewal">
+      <option value="">OS Renewal</option>
+      <option>Yes</option>
+      <option>No</option>
     </select>
 
-    <input type="text" name="technician" placeholder="Technician Name" required>
+    <select name="officeRenewal">
+      <option value="">MS Office Renewal</option>
+      <option>Yes</option>
+      <option>No</option>
+    </select>
 
-    <button type="submit">Submit PM Record</button>
+    <select name="cleanDust">
+      <option value="">Clean & Remove Dust</option>
+      <option>Yes</option>
+      <option>No</option>
+    </select>
+
+    <select name="pmsStatus">
+      <option value="">PMS Status</option>
+      <option>Completed</option>
+      <option>Rescheduled</option>
+      <option>Pending</option>
+    </select>
+
+    <textarea name="issueFound" placeholder="Issue Found"></textarea>
+    <textarea name="recommendation" placeholder="Recommendation"></textarea>
+    <textarea name="remark" placeholder="Remark / Status"></textarea>
+
+    <button type="submit">Submit PMS Record</button>
   </form>
 
   <div class="success" id="message"></div>
+
 </div>
 
 <script>
@@ -93,22 +141,24 @@ document.getElementById("pmForm").addEventListener("submit", function(e) {
   const formData = new FormData(this);
   const data = Object.fromEntries(formData.entries());
 
-  fetch("https://script.google.com/macros/s/AKfycbwediPDKWqwxsBz6yJPIZeABo2cB30nlepo5BvZVRvtczaAK_7SXuIlbaSylVlgdKMX/exec", {
+  fetch("https://script.google.com/macros/s/AKfycbwediPDKWqwxsBz6yJPIZeABo2cB30nlepo5BvZVRvtczaAK_7SXuIlbaSylVlgdKMX/exec", {   // 🔴 PASTE YOUR /exec URL HERE
     method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify(data)
   })
-  .then(response => response.json())
+  .then(response => response.text())
   .then(result => {
-    document.getElementById("message").innerText = "PM Record Submitted Successfully!";
+    document.getElementById("message").innerText = "PMS Record Submitted Successfully!";
     document.getElementById("pmForm").reset();
   })
   .catch(error => {
-    alert("Error submitting form.");
+    console.error(error);
+    alert("Submission Failed. Check deployment settings.");
   });
 });
 </script>
 
 </body>
 </html>
-
-
