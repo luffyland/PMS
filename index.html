@@ -236,6 +236,36 @@
 
   .filter-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
   .filter-row input, .filter-row select { max-width: 200px; }
+
+  /* BUSINESS UNITS */
+  .month-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .month-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;
+  }
+  .month-card:hover { border-color: var(--accent); }
+  .month-card.current-month { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .month-card.has-bu { border-color: var(--accent3); }
+  .month-card.current-month.has-bu { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .month-card-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; font-family: var(--mono); margin-bottom: 4px; }
+  .month-card-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .month-card-bu { font-size: 11px; color: var(--accent3); margin-top: 4px; }
+  .month-card-badge { position: absolute; top: 10px; right: 10px; }
+  .month-card.current-month .month-card-label { color: var(--accent); }
+  .bu-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px; margin-bottom: 12px;
+  }
+  .bu-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .bu-card-name { font-size: 15px; font-weight: 600; }
+  .bu-card-meta { font-size: 12px; color: var(--text2); display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
+  .bu-card-meta span { display: flex; align-items: center; gap: 4px; }
+  .bu-devices { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .bu-device-tag { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; font-size: 11px; color: var(--text2); }
+  .month-pill { display: inline-flex; align-items: center; justify-content: center; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: rgba(79,142,247,0.15); color: var(--accent3); border: 1px solid rgba(79,142,247,0.2); }
+  .month-pill.active-month { background: rgba(0,212,170,0.15); color: var(--accent); border-color: rgba(0,212,170,0.3); }
+  .progress-bar-wrap { background: var(--surface2); border-radius: 4px; height: 6px; margin-top: 8px; }
+  .progress-bar-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width 0.4s; }
 </style>
 </head>
 <body>
@@ -259,6 +289,7 @@
       <div class="nav-section">
         <div class="nav-section-label">Maintenance</div>
         <div class="nav-item" onclick="navigate('log')"><span class="nav-icon">📋</span> PM Logs</div>
+        <div class="nav-item" onclick="navigate('bu')"><span class="nav-icon">🏢</span> Business Units</div>
         <div class="nav-item" onclick="navigate('schedule')"><span class="nav-icon">📅</span> Schedule</div>
       </div>
       <div class="nav-section">
@@ -332,11 +363,40 @@
       </div>
     </div>
 
+    <!-- BUSINESS UNITS -->
+    <div id="page-bu" class="page">
+      <div class="page-header">
+        <div class="page-title">Business Units</div>
+        <div class="page-sub">Each BU has a fixed PM month. Devices are grouped per BU.</div>
+        <div class="page-actions">
+          <button class="btn btn-primary" onclick="openBUModal()">+ Add Business Unit</button>
+          <button class="btn btn-secondary" onclick="syncToSheets()">↑ Sync to Sheets</button>
+        </div>
+      </div>
+
+      <!-- Month calendar overview -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header"><div class="card-title">📆 Annual PM Calendar</div></div>
+        <div class="card-body">
+          <div class="month-grid" id="buMonthGrid"></div>
+        </div>
+      </div>
+
+      <!-- BU list filtered by selected month -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title" id="buListTitle">All Business Units</div>
+          <button class="btn btn-sm btn-secondary" id="buClearFilter" onclick="clearBUMonthFilter()" style="display:none;">✕ Clear filter</button>
+        </div>
+        <div class="card-body" id="buList"></div>
+      </div>
+    </div>
+
     <!-- SCHEDULE -->
     <div id="page-schedule" class="page">
       <div class="page-header">
         <div class="page-title">Maintenance Schedule</div>
-        <div class="page-sub">Upcoming and overdue maintenance</div>
+        <div class="page-sub">Generated from Business Unit monthly PM assignments</div>
         <div class="page-actions">
           <button class="btn btn-primary" onclick="openScheduleModal()">+ Add Schedule</button>
         </div>
@@ -356,7 +416,7 @@
         <div class="card-header"><div class="card-title">All Schedules</div></div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Device</th><th>Scheduled Date</th><th>Type</th><th>Assigned To</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Device</th><th>BU</th><th>Scheduled Date</th><th>Type</th><th>Assigned To</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead>
             <tbody id="schedTable"></tbody>
           </table>
           <div id="schedEmpty" class="empty-state" style="display:none;"><div class="empty-icon">📅</div><div class="empty-text">No schedules yet</div></div>
@@ -575,6 +635,60 @@
   </div>
 </div>
 
+<!-- MODAL: BUSINESS UNIT -->
+<div class="modal-overlay" id="buModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="buModalTitle">Add Business Unit</div>
+      <button class="modal-close" onclick="closeModal('buModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Business Unit Name *</label>
+          <input type="text" id="buName" placeholder="e.g. Finance, HR, IT">
+        </div>
+        <div class="form-group">
+          <label>PM Month *</label>
+          <select id="buMonth">
+            <option value="1">January</option><option value="2">February</option>
+            <option value="3">March</option><option value="4">April</option>
+            <option value="5">May</option><option value="6">June</option>
+            <option value="7">July</option><option value="8">August</option>
+            <option value="9">September</option><option value="10">October</option>
+            <option value="11">November</option><option value="12">December</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Location / Department</label>
+          <input type="text" id="buLocation" placeholder="e.g. 2nd Floor, Main Building">
+        </div>
+        <div class="form-group">
+          <label>Assigned Technician</label>
+          <input type="text" id="buTech" placeholder="Technician name">
+        </div>
+        <div class="form-group span2">
+          <label>Contact Person</label>
+          <input type="text" id="buContact" placeholder="Name and/or contact number">
+        </div>
+        <div class="form-group span2">
+          <label>Devices under this BU</label>
+          <div id="buDeviceChecklist" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;max-height:160px;overflow-y:auto;padding:4px;"></div>
+          <div style="font-size:11px;color:var(--text3);margin-top:6px;">Select devices that belong to this Business Unit</div>
+        </div>
+        <div class="form-group span2">
+          <label>Notes</label>
+          <textarea id="buNotes" placeholder="Special instructions or notes..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('buModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBU()">Save Business Unit</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: SCHEDULE -->
 <div class="modal-overlay" id="scheduleModal">
   <div class="modal">
@@ -671,6 +785,7 @@ let db = {
   devices: JSON.parse(localStorage.getItem('pm_devices') || '[]'),
   logs: JSON.parse(localStorage.getItem('pm_logs') || '[]'),
   schedules: JSON.parse(localStorage.getItem('pm_schedules') || '[]'),
+  bus: JSON.parse(localStorage.getItem('pm_bus') || '[]'),
   gsURL: localStorage.getItem('pm_gsURL') || '',
   gsConnected: localStorage.getItem('pm_gsConnected') === 'true'
 };
@@ -680,6 +795,7 @@ function save() {
   localStorage.setItem('pm_devices', JSON.stringify(db.devices));
   localStorage.setItem('pm_logs', JSON.stringify(db.logs));
   localStorage.setItem('pm_schedules', JSON.stringify(db.schedules));
+  localStorage.setItem('pm_bus', JSON.stringify(db.bus));
 }
 
 // ==================== NAVIGATION ====================
@@ -691,6 +807,7 @@ function navigate(page) {
   if (page === 'dashboard') renderDashboard();
   if (page === 'log') renderLogs();
   if (page === 'inventory') renderDevices();
+  if (page === 'bu') renderBU();
   if (page === 'schedule') renderSchedule();
   if (page === 'reports') renderReports();
 }
@@ -961,7 +1078,10 @@ function renderSchedule() {
   else su.innerHTML = upcoming.slice(0,5).map(s => `
     <div class="schedule-item">
       <div class="schedule-date">${s.date}</div>
-      <div class="schedule-info"><div class="schedule-device">${s.deviceName}</div><div class="schedule-type">${s.type}${s.assigned?' — '+s.assigned:''}</div></div>
+      <div class="schedule-info">
+        <div class="schedule-device">${s.deviceName}</div>
+        <div class="schedule-type">${s.buName ? s.buName + ' · ' : ''}${s.type}${s.assigned?' — '+s.assigned:''}</div>
+      </div>
       ${statusBadge('Scheduled')}
     </div>`).join('');
 
@@ -970,7 +1090,10 @@ function renderSchedule() {
   else so.innerHTML = overdue.map(s => `
     <div class="schedule-item">
       <div class="schedule-date" style="color:var(--danger)">${s.date}</div>
-      <div class="schedule-info"><div class="schedule-device">${s.deviceName}</div><div class="schedule-type">${s.type}</div></div>
+      <div class="schedule-info">
+        <div class="schedule-device">${s.deviceName}</div>
+        <div class="schedule-type">${s.buName ? s.buName + ' · ' : ''}${s.type}</div>
+      </div>
       ${statusBadge('Overdue')}
     </div>`).join('');
 
@@ -981,6 +1104,7 @@ function renderSchedule() {
   tbody.innerHTML = db.schedules.map(s => `
     <tr>
       <td><strong>${s.deviceName}</strong></td>
+      <td style="font-size:12px;color:var(--text2)">${s.buName||'—'}</td>
       <td style="font-family:var(--mono);font-size:12px">${s.date}</td>
       <td>${s.type}</td>
       <td>${s.assigned||'—'}</td>
@@ -1063,28 +1187,256 @@ function renderReports() {
     </div>`;
 }
 
+// ==================== BUSINESS UNITS ====================
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+let buMonthFilter = null;
+let editingBU = null;
+
+function openBUModal(id = null) {
+  editingBU = id;
+  const bu = id ? db.bus.find(b => b.id == id) : null;
+  document.getElementById('buModalTitle').textContent = id ? 'Edit Business Unit' : 'Add Business Unit';
+  document.getElementById('buName').value = bu ? bu.name : '';
+  document.getElementById('buMonth').value = bu ? bu.month : (new Date().getMonth() + 1);
+  document.getElementById('buLocation').value = bu ? (bu.location || '') : '';
+  document.getElementById('buTech').value = bu ? (bu.tech || '') : '';
+  document.getElementById('buContact').value = bu ? (bu.contact || '') : '';
+  document.getElementById('buNotes').value = bu ? (bu.notes || '') : '';
+
+  // Populate device checklist
+  const checklist = document.getElementById('buDeviceChecklist');
+  if (!db.devices.length) {
+    checklist.innerHTML = '<span style="font-size:12px;color:var(--text3)">No devices yet. Add devices in Inventory first.</span>';
+  } else {
+    checklist.innerHTML = db.devices.map(d => `
+      <label class="checkbox-item" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:5px 10px;">
+        <input type="checkbox" value="${d.id}" ${bu && (bu.deviceIds||[]).includes(d.id) ? 'checked' : ''}>
+        ${d.type === 'Laptop' ? '💻' : '🖥️'} ${d.name}
+      </label>`).join('');
+  }
+  openModal('buModal');
+}
+
+function saveBU() {
+  const name = document.getElementById('buName').value.trim();
+  const month = parseInt(document.getElementById('buMonth').value);
+  if (!name) { toast('Business Unit name is required.', 'error'); return; }
+
+  // Check if another BU already has this month (excluding current edit)
+  const conflict = db.bus.find(b => b.month === month && b.id != editingBU);
+  if (conflict) {
+    toast(`${MONTHS[month-1]} is already assigned to "${conflict.name}".`, 'error');
+    return;
+  }
+
+  const deviceIds = [...document.querySelectorAll('#buDeviceChecklist input:checked')].map(c => parseInt(c.value));
+
+  const bu = {
+    id: editingBU || Date.now(),
+    name, month,
+    location: document.getElementById('buLocation').value,
+    tech: document.getElementById('buTech').value,
+    contact: document.getElementById('buContact').value,
+    notes: document.getElementById('buNotes').value,
+    deviceIds
+  };
+
+  if (editingBU) {
+    const i = db.bus.findIndex(b => b.id == editingBU);
+    db.bus[i] = bu;
+  } else {
+    db.bus.push(bu);
+  }
+  save();
+  closeModal('buModal');
+
+  // Auto-generate schedules for this BU's devices
+  autoGenerateSchedules(bu);
+
+  toast(editingBU ? 'Business Unit updated!' : 'Business Unit saved! Schedules auto-generated.', 'success');
+  renderBU();
+  if (db.gsConnected) syncToSheets(true);
+}
+
+function autoGenerateSchedules(bu) {
+  const year = new Date().getFullYear();
+  const monthStr = String(bu.month).padStart(2, '0');
+  // Use 1st of the BU's month as the scheduled date
+  const schedDate = `${year}-${monthStr}-01`;
+
+  bu.deviceIds.forEach(devId => {
+    const device = db.devices.find(d => d.id == devId);
+    if (!device) return;
+
+    // Check if a schedule for this device + BU month already exists this year
+    const exists = db.schedules.find(s =>
+      s.deviceId == devId &&
+      s.buId == bu.id &&
+      s.date.startsWith(year + '-' + monthStr)
+    );
+    if (exists) return;
+
+    const now = new Date();
+    const schedDateObj = new Date(schedDate);
+    db.schedules.push({
+      id: Date.now() + Math.random(),
+      deviceId: devId,
+      deviceName: device.name,
+      buId: bu.id,
+      buName: bu.name,
+      date: schedDate,
+      type: 'Routine PM',
+      assigned: bu.tech || '',
+      notes: `Auto-generated for ${bu.name} — ${MONTHS[bu.month-1]} PM`,
+      status: schedDateObj < now ? 'Overdue' : 'Scheduled'
+    });
+  });
+  save();
+}
+
+function deleteBU(id) {
+  if (!confirm('Delete this Business Unit? Auto-generated schedules from this BU will also be removed.')) return;
+  // Remove BU-linked schedules
+  db.schedules = db.schedules.filter(s => s.buId != id);
+  db.bus = db.bus.filter(b => b.id != id);
+  save();
+  renderBU();
+  toast('Business Unit deleted.', 'info');
+}
+
+function clearBUMonthFilter() {
+  buMonthFilter = null;
+  document.getElementById('buClearFilter').style.display = 'none';
+  document.getElementById('buListTitle').textContent = 'All Business Units';
+  renderBUList();
+  // Reset month grid highlight
+  document.querySelectorAll('.month-card').forEach(c => c.style.outline = '');
+}
+
+function filterByMonth(monthNum) {
+  buMonthFilter = monthNum;
+  document.getElementById('buClearFilter').style.display = 'inline-flex';
+  document.getElementById('buListTitle').textContent = `Business Units — ${MONTHS[monthNum-1]}`;
+  renderBUList();
+}
+
+function renderBU() {
+  renderBUMonthGrid();
+  renderBUList();
+}
+
+function renderBUMonthGrid() {
+  const currentMonth = new Date().getMonth() + 1;
+  const grid = document.getElementById('buMonthGrid');
+  grid.innerHTML = MONTHS.map((m, i) => {
+    const monthNum = i + 1;
+    const bu = db.bus.find(b => b.month === monthNum);
+    const isCurrent = monthNum === currentMonth;
+    const completedCount = bu ? db.schedules.filter(s => s.buId == bu.id && s.status === 'Completed').length : 0;
+    const totalCount = bu ? (bu.deviceIds || []).length : 0;
+    return `
+      <div class="month-card ${isCurrent ? 'current-month' : ''} ${bu ? 'has-bu' : ''}"
+           onclick="filterByMonth(${monthNum})" title="Click to filter">
+        <div class="month-card-label">${isCurrent ? '▶ This month' : 'Month ' + monthNum}</div>
+        <div class="month-card-name">${m}</div>
+        ${bu ? `
+          <div class="month-card-bu">🏢 ${bu.name}</div>
+          ${totalCount > 0 ? `
+            <div class="progress-bar-wrap" style="margin-top:6px;">
+              <div class="progress-bar-fill" style="width:${Math.round(completedCount/totalCount*100)}%"></div>
+            </div>
+            <div style="font-size:10px;color:var(--text3);margin-top:3px;">${completedCount}/${totalCount} done</div>
+          ` : ''}
+          <div class="month-card-badge">${isCurrent ? '<span class="badge badge-green" style="font-size:10px;">Active</span>' : ''}</div>
+        ` : `<div style="font-size:11px;color:var(--text3);margin-top:6px;">No BU assigned</div>`}
+      </div>`;
+  }).join('');
+}
+
+function renderBUList() {
+  const container = document.getElementById('buList');
+  let list = buMonthFilter ? db.bus.filter(b => b.month === buMonthFilter) : db.bus;
+  list = list.slice().sort((a, b) => a.month - b.month);
+
+  if (!list.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🏢</div><div class="empty-text">' +
+      (buMonthFilter ? 'No BU assigned to ' + MONTHS[buMonthFilter-1] : 'No Business Units yet. Add your first BU!') +
+      '</div></div>';
+    return;
+  }
+
+  const currentMonth = new Date().getMonth() + 1;
+  container.innerHTML = list.map(bu => {
+    const devices = db.devices.filter(d => (bu.deviceIds || []).includes(d.id));
+    const schedules = db.schedules.filter(s => s.buId == bu.id);
+    const completed = schedules.filter(s => s.status === 'Completed').length;
+    const isActive = bu.month === currentMonth;
+
+    return `
+      <div class="bu-card">
+        <div class="bu-card-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="month-pill ${isActive ? 'active-month' : ''}">${MONTHS[bu.month-1]}</span>
+            <div class="bu-card-name">🏢 ${bu.name}</div>
+            ${isActive ? '<span class="badge badge-green" style="font-size:10px;">This Month</span>' : ''}
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-sm btn-secondary" onclick="openBUModal(${bu.id})">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteBU(${bu.id})">Delete</button>
+          </div>
+        </div>
+        <div class="bu-card-meta">
+          ${bu.location ? `<span>📍 ${bu.location}</span>` : ''}
+          ${bu.tech ? `<span>🔧 ${bu.tech}</span>` : ''}
+          ${bu.contact ? `<span>👤 ${bu.contact}</span>` : ''}
+          <span>🖥️ ${devices.length} device${devices.length !== 1 ? 's' : ''}</span>
+          <span>📋 ${completed}/${schedules.length} PM done</span>
+        </div>
+        ${schedules.length > 0 ? `
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" style="width:${schedules.length > 0 ? Math.round(completed/schedules.length*100) : 0}%"></div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;margin-bottom:8px;">${schedules.length > 0 ? Math.round(completed/schedules.length*100) : 0}% complete</div>
+        ` : ''}
+        ${bu.notes ? `<div style="font-size:12px;color:var(--text2);margin-bottom:8px;">📝 ${bu.notes}</div>` : ''}
+        <div class="bu-devices">
+          ${devices.length ? devices.map(d => `<span class="bu-device-tag">${d.type === 'Laptop' ? '💻' : '🖥️'} ${d.name}</span>`).join('') : '<span style="font-size:12px;color:var(--text3);">No devices assigned yet</span>'}
+        </div>
+      </div>`;
+  }).join('');
+}
+
 // ==================== GOOGLE SHEETS ====================
 const appsScript = `function doPost(e) {
   var data = JSON.parse(e.postData.contents);
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(data.sheet);
-  if (!sheet) { sheet = ss.insertSheet(data.sheet); }
-  
+
+  if (!sheet) {
+    sheet = ss.insertSheet(data.sheet);
+  }
+
   if (data.action === 'clear_and_write') {
     sheet.clearContents();
-    if (data.headers) sheet.appendRow(data.headers);
-    (data.rows || []).forEach(function(row) { sheet.appendRow(row); });
+
+    if (data.headers) {
+      sheet.appendRow(data.headers);
+    }
+
+    (data.rows || []).forEach(function(row) {
+      sheet.appendRow(row);
+    });
   }
-  
-  return ContentService.createTextOutput(
-    JSON.stringify({status: 'ok'})
-  ).setMimeType(ContentService.MimeType.JSON);
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: 'ok' }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function doGet(e) {
-  return ContentService.createTextOutput(
-    JSON.stringify({status: 'ready'})
-  ).setMimeType(ContentService.MimeType.JSON);
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: 'ready' }))
+    .setMimeType(ContentService.MimeType.JSON);
 }`;
 
 document.getElementById('appsScriptCode').textContent = appsScript;
@@ -1101,18 +1453,26 @@ function openGSModal() {
 async function saveGSConfig() {
   const url = document.getElementById('gsURL').value.trim();
   if (!url) { toast('Please enter a Web App URL.', 'error'); return; }
-  toast('Testing connection...', 'info');
-  try {
-    const res = await fetch(url + '?test=1', { method: 'GET', mode: 'no-cors' });
-    db.gsURL = url; db.gsConnected = true;
-    localStorage.setItem('pm_gsURL', url);
-    localStorage.setItem('pm_gsConnected', 'true');
-    updateGSStatus(true);
-    closeModal('gsModal');
-    toast('Google Sheets connected! ✅', 'success');
-  } catch (err) {
-    toast('Connection failed. Check the URL.', 'error');
+  if (!url.startsWith('https://script.google.com/macros/s/')) {
+    toast('URL must start with https://script.google.com/macros/s/...', 'error');
+    return;
   }
+  toast('Saving connection...', 'info');
+  try {
+    // CORS blocks reading the response, but a real network error still throws.
+    // As long as the fetch doesn't throw, the URL domain is valid.
+    await fetch(url, { method: 'GET', mode: 'no-cors' });
+  } catch (err) {
+    toast('Network error. Make sure you are online.', 'error');
+    return;
+  }
+  db.gsURL = url;
+  db.gsConnected = true;
+  localStorage.setItem('pm_gsURL', url);
+  localStorage.setItem('pm_gsConnected', 'true');
+  updateGSStatus(true);
+  closeModal('gsModal');
+  toast('Google Sheets connected! ✅', 'success');
 }
 
 function updateGSStatus(connected) {
@@ -1130,7 +1490,8 @@ async function syncToSheets(silent = false) {
     const sends = [
       { sheet: 'PM_Logs', headers: ['ID','Date','Device','PM Type','Technician','Location','Status','Next PM','Duration (min)','Actions','Findings'], rows: db.logs.map(l => [l.id, l.date, l.deviceName, l.type, l.tech, l.location, l.status, l.nextPM||'', l.duration||'', (l.actions||[]).join('; '), l.findings||'']) },
       { sheet: 'Devices', headers: ['ID','Name','Type','Brand','Model','Serial','CPU','RAM','Storage','OS','Location','User','Status','Last PM','Purchase','Warranty'], rows: db.devices.map(d => [d.id, d.name, d.type, d.brand||'', d.model||'', d.serial||'', d.cpu||'', d.ram||'', d.storage||'', d.os||'', d.location||'', d.user||'', d.status, d.lastPM||'', d.purchase||'', d.warranty||'']) },
-      { sheet: 'Schedules', headers: ['ID','Device','Date','Type','Assigned','Status','Notes'], rows: db.schedules.map(s => [s.id, s.deviceName, s.date, s.type, s.assigned||'', s.status, s.notes||'']) }
+      { sheet: 'Business_Units', headers: ['ID','BU Name','PM Month','Location','Technician','Contact','Device Count','Notes'], rows: db.bus.map(b => [b.id, b.name, MONTHS[b.month-1], b.location||'', b.tech||'', b.contact||'', (b.deviceIds||[]).length, b.notes||'']) },
+      { sheet: 'Schedules', headers: ['ID','Device','Business Unit','Date','Type','Assigned','Status','Notes'], rows: db.schedules.map(s => [s.id, s.deviceName, s.buName||'', s.date, s.type, s.assigned||'', s.status, s.notes||'']) }
     ];
     for (const payload of sends) {
       await fetch(db.gsURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'clear_and_write', ...payload }) });
