@@ -2086,7 +2086,12 @@ document.addEventListener('DOMContentLoaded', function() {
   updateRequestBadge();
 
   if (window.location.hash === '#admin') {
-    // Show the admin gate (already visible by default)
+    // Explicitly show the gate, hide everything else
+    sessionStorage.removeItem('pm_authed');
+    document.getElementById('adminGate').style.display = 'flex';
+    document.getElementById('appWrap').style.display = 'none';
+    document.getElementById('requestFormOverlay').classList.remove('open');
+    document.getElementById('gatePassword').focus();
   } else if (sessionStorage.getItem('pm_authed') === '1') {
     // Already authenticated this session
     document.getElementById('adminGate').style.display = 'none';
