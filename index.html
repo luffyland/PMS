@@ -462,25 +462,60 @@
         <div class="page-title">Dashboard</div>
         <div class="page-sub" id="dashDate"></div>
         <div class="page-actions">
-          <button class="btn btn-primary" onclick="openLogModal()">+ New PM Log</button>
           <button class="btn btn-secondary" onclick="syncToSheets()"><span id="syncIcon">↑</span> Sync to Sheets</button>
         </div>
       </div>
+
+      <!-- STAT CARDS -->
       <div class="stats-grid">
         <div class="stat-card c1"><div class="stat-icon">🖥️</div><div class="stat-value" id="statDevices">0</div><div class="stat-label">Total Devices</div></div>
         <div class="stat-card c2"><div class="stat-icon">📋</div><div class="stat-value" id="statLogs">0</div><div class="stat-label">PM Logs This Month</div></div>
         <div class="stat-card c3"><div class="stat-icon">📅</div><div class="stat-value" id="statDue">0</div><div class="stat-label">Due This Week</div></div>
         <div class="stat-card c4"><div class="stat-icon">⚠️</div><div class="stat-value" id="statOverdue">0</div><div class="stat-label">Overdue</div></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+      <!-- ROW 1: Monthly Activity Bar + PM Status Donut -->
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px;">
         <div class="card">
-          <div class="card-header"><div class="card-title">Recent PM Logs</div></div>
-          <div class="card-body" id="recentLogs"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No logs yet</div></div></div>
+          <div class="card-header"><div class="card-title">Monthly PM Activity</div><div style="font-size:11px;color:var(--text3)">Last 6 months</div></div>
+          <div class="card-body" style="padding:16px 20px 20px;">
+            <canvas id="chartMonthly" height="160"></canvas>
+          </div>
         </div>
         <div class="card">
-          <div class="card-header"><div class="card-title">Upcoming Schedule</div></div>
-          <div class="card-body" id="upcomingSchedule"><div class="empty-state"><div class="empty-icon">📅</div><div class="empty-text">No upcoming schedule</div></div></div>
+          <div class="card-header"><div class="card-title">PM Status</div></div>
+          <div class="card-body" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:14px;">
+            <canvas id="chartStatus" width="160" height="160"></canvas>
+            <div id="chartStatusLegend" style="width:100%;font-size:12px;display:flex;flex-direction:column;gap:6px;"></div>
+          </div>
         </div>
+      </div>
+
+      <!-- ROW 2: Device Type Donut + PM Type Bar + Overdue list -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Device Types</div></div>
+          <div class="card-body" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:14px;">
+            <canvas id="chartDeviceType" width="140" height="140"></canvas>
+            <div id="chartDeviceLegend" style="width:100%;font-size:12px;display:flex;flex-direction:column;gap:6px;"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">PM by Type</div></div>
+          <div class="card-body" style="padding:16px 20px 20px;">
+            <canvas id="chartPMType" height="140"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">⚠️ Overdue</div></div>
+          <div class="card-body" id="overdueList" style="padding:8px 14px;"></div>
+        </div>
+      </div>
+
+      <!-- ROW 3: Upcoming Schedule -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">📅 Upcoming Schedule</div><div style="font-size:11px;color:var(--text3)">Next 30 days</div></div>
+        <div class="card-body" id="upcomingSchedule" style="padding:8px 14px;"></div>
       </div>
     </div>
 
@@ -1270,39 +1305,195 @@ function statusBadge(status) {
   return `<span class="badge ${map[status]||'badge-gray'}">${status}</span>`;
 }
 
+// ── Canvas chart helpers ──────────────────────────────────────────────────────
+function drawBarChart(canvasId, labels, values, color) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 400;
+  canvas.width = W;
+  const H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const max = Math.max(...values, 1);
+  const barW = Math.floor((W - 40) / labels.length) - 8;
+  const padL = 32, padB = 28, padT = 10;
+  const chartH = H - padB - padT;
+
+  // Y grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  for (let i = 1; i <= 4; i++) {
+    const y = padT + chartH - (chartH * i / 4);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - 8, y); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.font = '10px IBM Plex Mono, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(Math.round(max * i / 4), padL - 4, y + 3);
+  }
+
+  labels.forEach((label, i) => {
+    const x = padL + i * (barW + 8);
+    const bh = values[i] ? Math.max(4, (values[i] / max) * chartH) : 0;
+    const y = padT + chartH - bh;
+
+    // Bar
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.roundRect(x, y, barW, bh, [3, 3, 0, 0]);
+    ctx.fill();
+
+    // Value on top
+    if (values[i]) {
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.font = 'bold 11px IBM Plex Sans, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(values[i], x + barW / 2, y - 4);
+    }
+
+    // Label
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = '10px IBM Plex Sans, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, x + barW / 2, H - 6);
+  });
+}
+
+function drawDonutChart(canvasId, data, colors, legendId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const total = data.reduce((s, d) => s + d.value, 0);
+  if (!total) {
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.beginPath(); ctx.arc(W/2, H/2, H/2-8, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.font = '11px IBM Plex Sans'; ctx.textAlign = 'center';
+    ctx.fillText('No data', W/2, H/2 + 4);
+    return;
+  }
+
+  let start = -Math.PI / 2;
+  data.forEach((d, i) => {
+    const slice = (d.value / total) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(W/2, H/2);
+    ctx.arc(W/2, H/2, H/2 - 6, start, start + slice);
+    ctx.closePath();
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fill();
+    start += slice;
+  });
+
+  // Donut hole
+  ctx.beginPath();
+  ctx.arc(W/2, H/2, H/2 - 28, 0, Math.PI*2);
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim() || '#1a1f2e';
+  ctx.fill();
+
+  // Center total
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.font = 'bold 18px IBM Plex Sans'; ctx.textAlign = 'center';
+  ctx.fillText(total, W/2, H/2 + 2);
+  ctx.font = '10px IBM Plex Sans';
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.fillText('total', W/2, H/2 + 14);
+
+  // Legend
+  if (legendId) {
+    const leg = document.getElementById(legendId);
+    if (leg) leg.innerHTML = data.map((d, i) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:6px;">
+          <span style="width:10px;height:10px;border-radius:2px;background:${colors[i%colors.length]};flex-shrink:0;display:inline-block;"></span>
+          ${d.label}
+        </span>
+        <strong style="color:var(--text)">${d.value}</strong>
+      </div>`).join('');
+  }
+}
+
 function renderDashboard() {
   document.getElementById('dashDate').textContent = new Date().toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-  document.getElementById('statDevices').textContent = db.devices.length;
-  const now = new Date(), monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  document.getElementById('statLogs').textContent = db.logs.filter(l => new Date(l.date) >= monthStart).length;
+
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const weekEnd = new Date(now); weekEnd.setDate(weekEnd.getDate() + 7);
+
+  // Stat cards
+  document.getElementById('statDevices').textContent = db.devices.length;
+  document.getElementById('statLogs').textContent = db.logs.filter(l => new Date(l.date) >= monthStart).length;
   const due = db.schedules.filter(s => { const d = new Date(s.date); return d >= now && d <= weekEnd && s.status !== 'Completed'; });
   document.getElementById('statDue').textContent = due.length;
   const overdue = db.schedules.filter(s => new Date(s.date) < now && s.status !== 'Completed');
   document.getElementById('statOverdue').textContent = overdue.length;
 
-  const rl = document.getElementById('recentLogs');
-  const recent = db.logs.slice(0, 5);
-  if (!recent.length) { rl.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No logs yet</div></div>'; }
-  else {
-    rl.innerHTML = recent.map(l => `
-      <div class="schedule-item">
-        <div class="schedule-date">${l.date}</div>
-        <div class="schedule-info"><div class="schedule-device">${l.deviceName}</div><div class="schedule-type">${l.type} — ${l.tech}</div></div>
-        ${statusBadge(l.status)}
+  // Overdue list
+  const overdueEl = document.getElementById('overdueList');
+  if (!overdue.length) {
+    overdueEl.innerHTML = '<div class="empty-state" style="padding:20px;"><div class="empty-icon">✅</div><div class="empty-text">All clear!</div></div>';
+  } else {
+    overdueEl.innerHTML = overdue.slice(0,6).map(s => `
+      <div class="schedule-item" style="padding:8px 0;border-bottom:1px solid var(--border);">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--danger)">${s.date}</div>
+        <div class="schedule-info"><div class="schedule-device" style="font-size:12px;">${s.deviceName||'—'}</div><div class="schedule-type">${s.type}</div></div>
       </div>`).join('');
   }
+
+  // Upcoming schedule
+  const upcoming = db.schedules.filter(s => { const d = new Date(s.date); return d >= now && s.status !== 'Completed'; })
+    .sort((a,b) => new Date(a.date)-new Date(b.date)).slice(0,8);
   const us = document.getElementById('upcomingSchedule');
-  const upcoming = db.schedules.filter(s => new Date(s.date) >= now && s.status !== 'Completed').sort((a,b) => new Date(a.date)-new Date(b.date)).slice(0,5);
-  if (!upcoming.length) { us.innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-text">No upcoming schedule</div></div>'; }
-  else {
-    us.innerHTML = upcoming.map(s => `
-      <div class="schedule-item">
-        <div class="schedule-date">${s.date}</div>
-        <div class="schedule-info"><div class="schedule-device">${s.deviceName}</div><div class="schedule-type">${s.type}</div></div>
-        ${statusBadge(s.status)}
-      </div>`).join('');
+  if (!upcoming.length) {
+    us.innerHTML = '<div class="empty-state" style="padding:20px;"><div class="empty-icon">📅</div><div class="empty-text">No upcoming schedules</div></div>';
+  } else {
+    us.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;padding:8px 0;">` +
+      upcoming.map(s => `
+        <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;border-left:3px solid var(--accent);">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--accent);margin-bottom:4px;">${s.date}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;">${s.deviceName||'—'}</div>
+          <div style="font-size:11px;color:var(--text2);">${s.type}${s.assigned?' · '+s.assigned:''}</div>
+        </div>`).join('') + '</div>';
   }
+
+  // Charts — use requestAnimationFrame to ensure canvas is laid out
+  requestAnimationFrame(() => {
+    // Monthly bar chart (last 6 months)
+    const months = [], counts = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const label = d.toLocaleDateString('en-PH', { month: 'short' });
+      const count = db.logs.filter(l => {
+        const ld = new Date(l.date);
+        return ld.getFullYear() === d.getFullYear() && ld.getMonth() === d.getMonth();
+      }).length;
+      months.push(label); counts.push(count);
+    }
+    drawBarChart('chartMonthly', months, counts, '#00d4aa');
+
+    // PM Status donut
+    const statusColors = ['#00d4aa','#4f8ef7','#f59e0b','#ef4444'];
+    const statusLabels = ['Completed','In Progress','Pending','Overdue'];
+    const statusData = statusLabels.map((label, i) => ({
+      label, value: db.logs.filter(l => l.status === label).length
+    }));
+    drawDonutChart('chartStatus', statusData, statusColors, 'chartStatusLegend');
+
+    // Device type donut
+    const desktops = db.devices.filter(d => d.type === 'Desktop').length;
+    const laptops  = db.devices.filter(d => d.type === 'Laptop').length;
+    drawDonutChart('chartDeviceType', [
+      { label: 'Desktop', value: desktops },
+      { label: 'Laptop',  value: laptops }
+    ], ['#4f8ef7','#a78bfa'], 'chartDeviceLegend');
+
+    // PM Type bar chart
+    const pmTypes = ['Routine PM','Deep Clean','Hardware Check','Software Update','Full PM'];
+    const pmCounts = pmTypes.map(t => db.logs.filter(l => l.type === t).length);
+    drawBarChart('chartPMType', pmTypes.map(t => t.split(' ')[0]), pmCounts, '#4f8ef7');
+  });
 }
 
 function renderLogs() {
