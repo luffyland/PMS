@@ -297,7 +297,6 @@
       </div>
       <div class="nav-section">
         <div class="nav-section-label">Assets</div>
-        <div class="nav-item" onclick="navigate('users')"><span class="nav-icon">👥</span> Users</div>
       </div>
       <div class="nav-section">
         <div class="nav-section-label">Analytics</div>
@@ -501,6 +500,7 @@
                 <th>Device Type</th>
                 <th>Notes</th>
                 <th>Submitted</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="requestsTable"></tbody>
@@ -512,63 +512,6 @@
         </div>
       </div>
     </div>
-
-    <!-- USERS -->
-    <div id="page-users" class="page">
-      <div class="page-header">
-        <div class="page-title">Users</div>
-        <div class="page-sub">Registered requestors who submit PM requests</div>
-        <div class="page-actions">
-          <button class="btn btn-primary" onclick="openUserModal()">+ Add User</button>
-          <button class="btn btn-secondary" onclick="copyRegLink()">🔗 Copy Registration Link</button>
-          <button class="btn btn-secondary" onclick="exportCSV('users')">↓ Export CSV</button>
-        </div>
-      </div>
-
-      <!-- Self-registration notice -->
-      <div style="background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.2);border-radius:8px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px;">
-        <span style="font-size:18px;">ℹ️</span>
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--accent3);margin-bottom:4px;">Self-Registration Available</div>
-          <div style="font-size:12px;color:var(--text2);">Users can register themselves by opening this file and clicking <strong style="color:var(--text);">Register as User</strong> on the login screen, or you can add them manually here. All registrations sync to Google Sheets.</div>
-        </div>
-      </div>
-
-      <div class="filter-row">
-        <input type="text" id="userSearch" placeholder="Search name, email, department..." oninput="renderUsers()">
-        <select id="userFilterDept" onchange="renderUsers()"><option value="">All Departments</option></select>
-        <select id="userFilterStatus" onchange="renderUsers()">
-          <option value="">All Status</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </select>
-      </div>
-
-      <div class="card">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Full Name</th>
-                <th>Department</th>
-                <th>Email</th>
-                <th>Registered</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="userTable"></tbody>
-          </table>
-          <div id="userEmpty" class="empty-state" style="display:none;">
-            <div class="empty-icon">👥</div>
-            <div class="empty-text">No users yet. Add one or share the registration link!</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-
 
     <!-- REPORTS -->
     <div id="page-reports" class="page">
@@ -679,70 +622,6 @@
 
 
 <!-- MODAL: ADD / EDIT USER (admin) -->
-<div class="modal-overlay" id="userModal">
-  <div class="modal" style="max-width:480px;">
-    <div class="modal-header">
-      <div class="modal-title" id="userModalTitle">Add User</div>
-      <button class="modal-close" onclick="closeModal('userModal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <div class="form-group span2">
-          <label>Full Name *</label>
-          <input type="text" id="uName" placeholder="e.g. Juan Dela Cruz">
-        </div>
-        <div class="form-group span2">
-          <label>Department *</label>
-          <input type="text" id="uDept" placeholder="e.g. Finance, HR, IT">
-        </div>
-        <div class="form-group span2">
-          <label>Email *</label>
-          <input type="email" id="uEmail" placeholder="user@company.com">
-        </div>
-        <div class="form-group span2">
-          <label>Status</label>
-          <select id="uStatus"><option>Active</option><option>Inactive</option></select>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('userModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveUser()">Save User</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: SELF-REGISTRATION -->
-<div class="modal-overlay" id="registerModal">
-  <div class="modal" style="max-width:480px;">
-    <div class="modal-header">
-      <div class="modal-title">📝 Register as User</div>
-      <button class="modal-close" onclick="closeModal('registerModal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <p style="font-size:13px;color:var(--text2);margin-bottom:18px;">Fill in your details to register. Your information will be submitted to the PM system admin.</p>
-      <div class="form-grid">
-        <div class="form-group span2">
-          <label>Full Name *</label>
-          <input type="text" id="regName" placeholder="Your full name">
-        </div>
-        <div class="form-group span2">
-          <label>Department *</label>
-          <input type="text" id="regDept" placeholder="Your department">
-        </div>
-        <div class="form-group span2">
-          <label>Email *</label>
-          <input type="email" id="regEmail" placeholder="Your email address">
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('registerModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="submitRegistration()">Submit Registration</button>
-    </div>
-  </div>
-</div>
-
 <!-- MODAL: DEVICE -->
 <div class="modal-overlay" id="deviceModal">
   <div class="modal">
@@ -965,7 +844,6 @@ let db = {
   logs: JSON.parse(localStorage.getItem('pm_logs') || '[]'),
   schedules: JSON.parse(localStorage.getItem('pm_schedules') || '[]'),
   bus: JSON.parse(localStorage.getItem('pm_bus') || '[]'),
-  users: JSON.parse(localStorage.getItem('pm_users') || '[]'),
   requests: JSON.parse(localStorage.getItem('pm_requests') || '[]'),
   gsURL: localStorage.getItem('pm_gsURL') || '',
   gsConnected: localStorage.getItem('pm_gsConnected') === 'true'
@@ -977,7 +855,6 @@ function save() {
   localStorage.setItem('pm_logs', JSON.stringify(db.logs));
   localStorage.setItem('pm_schedules', JSON.stringify(db.schedules));
   localStorage.setItem('pm_bus', JSON.stringify(db.bus));
-  localStorage.setItem('pm_users', JSON.stringify(db.users));
   db.requests = JSON.parse(localStorage.getItem('pm_requests') || '[]');
 }
 
@@ -991,7 +868,6 @@ function navigate(page) {
   if (page === 'devices') { renderDevices(); renderLogs(); }
   if (page === 'bu') renderBU();
   if (page === 'requests') renderRequests();
-  if (page === 'users') renderUsers();
   if (page === 'schedule') renderSchedule();
   if (page === 'reports') renderReports();
 }
@@ -1149,7 +1025,14 @@ function deleteDevice(id) {
 }
 function deleteSchedule(id) {
   db.schedules = db.schedules.filter(s => s.id != id);
-  save(); renderSchedule();
+  // Also remove from pm_requests so Requests tab stays in sync
+  const reqs = JSON.parse(localStorage.getItem('pm_requests') || '[]');
+  const filtered = reqs.filter(r => r.id != id);
+  localStorage.setItem('pm_requests', JSON.stringify(filtered));
+  db.requests = filtered;
+  save();
+  renderSchedule();
+  updateRequestBadge();
   toast('Schedule removed.', 'info');
 }
 function markDone(id) {
@@ -1616,7 +1499,15 @@ function updateRequestBadge() {
 }
 
 function renderRequests() {
-  const reqs = JSON.parse(localStorage.getItem('pm_requests') || '[]');
+  // Read from pm_requests localStorage, but cross-check with db.schedules
+  // so deletions in the Schedule page are immediately reflected here too
+  const reqs = JSON.parse(localStorage.getItem('pm_requests') || '[]')
+    .filter(r => db.schedules.some(s => s.id == r.id));
+
+  // Keep localStorage in sync with what's actually in the schedule
+  localStorage.setItem('pm_requests', JSON.stringify(reqs));
+  db.requests = reqs;
+
   const tbody = document.getElementById('requestsTable');
   const empty = document.getElementById('requestsEmpty');
   if (!reqs.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
@@ -1632,7 +1523,24 @@ function renderRequests() {
       <td>${r.deviceType ? `<span class="badge ${r.deviceType==='Laptop'?'badge-blue':'badge-gray'}">${r.deviceType}</span>` : '—'}</td>
       <td style="font-size:12px;color:var(--text2);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.notes||'—'}</td>
       <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">${r.submittedAt ? r.submittedAt.split('T')[0] : '—'}</td>
+      <td>
+        <button class="btn btn-sm btn-danger" onclick="deleteRequest(${r.id})">Remove</button>
+      </td>
     </tr>`).join('');
+}
+
+function deleteRequest(id) {
+  if (!confirm('Remove this request?')) return;
+  // Remove from schedules
+  db.schedules = db.schedules.filter(s => s.id != id);
+  // Remove from pm_requests
+  const reqs = JSON.parse(localStorage.getItem('pm_requests') || '[]').filter(r => r.id != id);
+  localStorage.setItem('pm_requests', JSON.stringify(reqs));
+  db.requests = reqs;
+  save();
+  renderRequests();
+  updateRequestBadge();
+  toast('Request removed.', 'info');
 }
 
 
@@ -1700,129 +1608,6 @@ function openHistoryDrawer(deviceId) {
 
 function closeHistoryDrawer() {
   document.getElementById('deviceHistoryDrawer').style.display = 'none';
-}
-
-// ==================== USERS ====================
-let editingUser = null;
-
-function openUserModal(id = null) {
-  editingUser = id;
-  const u = id ? db.users.find(x => x.id == id) : null;
-  document.getElementById('userModalTitle').textContent = id ? 'Edit User' : 'Add User';
-  document.getElementById('uName').value = u ? u.name : '';
-  document.getElementById('uDept').value = u ? u.dept : '';
-  document.getElementById('uEmail').value = u ? u.email : '';
-  document.getElementById('uStatus').value = u ? u.status : 'Active';
-  openModal('userModal');
-}
-
-function saveUser() {
-  const name = document.getElementById('uName').value.trim();
-  const dept = document.getElementById('uDept').value.trim();
-  const email = document.getElementById('uEmail').value.trim();
-  if (!name || !dept || !email) { toast('Please fill in all required fields.', 'error'); return; }
-
-  // Check duplicate email
-  const duplicate = db.users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.id != editingUser);
-  if (duplicate) { toast('A user with this email already exists.', 'error'); return; }
-
-  const user = {
-    id: editingUser || Date.now(),
-    name, dept, email,
-    status: document.getElementById('uStatus').value,
-    registered: editingUser ? (db.users.find(u => u.id == editingUser)||{}).registered : new Date().toISOString().split('T')[0]
-  };
-
-  if (editingUser) {
-    const i = db.users.findIndex(u => u.id == editingUser);
-    db.users[i] = user;
-  } else {
-    db.users.push(user);
-  }
-  save();
-  closeModal('userModal');
-  toast(editingUser ? 'User updated!' : 'User added!', 'success');
-  renderUsers();
-  if (db.gsConnected) syncToSheets(true);
-}
-
-function deleteUser(id) {
-  if (!confirm('Remove this user from the system?')) return;
-  db.users = db.users.filter(u => u.id != id);
-  save();
-  renderUsers();
-  toast('User removed.', 'info');
-}
-
-function submitRegistration() {
-  const name = document.getElementById('regName').value.trim();
-  const dept = document.getElementById('regDept').value.trim();
-  const email = document.getElementById('regEmail').value.trim();
-  if (!name || !dept || !email) { toast('Please fill in all fields.', 'error'); return; }
-
-  const duplicate = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
-  if (duplicate) { toast('This email is already registered.', 'error'); return; }
-
-  const user = {
-    id: Date.now(),
-    name, dept, email,
-    status: 'Active',
-    registered: new Date().toISOString().split('T')[0]
-  };
-  db.users.push(user);
-  save();
-  closeModal('registerModal');
-  document.getElementById('regName').value = '';
-  document.getElementById('regDept').value = '';
-  document.getElementById('regEmail').value = '';
-  toast(`Welcome, ${name}! Registration submitted successfully.`, 'success');
-  if (db.gsConnected) syncToSheets(true);
-}
-
-function copyRegLink() {
-  // The "link" is just the current file path — in a hosted scenario this would be a URL.
-  // We open the register modal as the self-serve flow instead.
-  openModal('registerModal');
-}
-
-function renderUsers() {
-  const search = (document.getElementById('userSearch')?.value || '').toLowerCase();
-  const fDept = document.getElementById('userFilterDept')?.value || '';
-  const fStatus = document.getElementById('userFilterStatus')?.value || '';
-
-  // Populate dept filter
-  const depts = [...new Set(db.users.map(u => u.dept).filter(Boolean))].sort();
-  const deptSel = document.getElementById('userFilterDept');
-  if (deptSel) {
-    const current = deptSel.value;
-    deptSel.innerHTML = '<option value="">All Departments</option>' + depts.map(d => `<option ${d===current?'selected':''}>${d}</option>`).join('');
-  }
-
-  let users = db.users.filter(u => {
-    if (search && !u.name.toLowerCase().includes(search) && !u.email.toLowerCase().includes(search) && !u.dept.toLowerCase().includes(search)) return false;
-    if (fDept && u.dept !== fDept) return false;
-    if (fStatus && u.status !== fStatus) return false;
-    return true;
-  });
-
-  const tbody = document.getElementById('userTable');
-  const empty = document.getElementById('userEmpty');
-  if (!users.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-
-  tbody.innerHTML = users.map((u, i) => `
-    <tr>
-      <td style="color:var(--text3);font-family:var(--mono);font-size:11px">${i + 1}</td>
-      <td><strong>${u.name}</strong></td>
-      <td>${u.dept}</td>
-      <td style="font-size:12px;color:var(--text2)">${u.email}</td>
-      <td style="font-family:var(--mono);font-size:12px;color:var(--text2)">${u.registered || '—'}</td>
-      <td>${statusBadge(u.status)}</td>
-      <td>
-        <button class="btn btn-sm btn-secondary" onclick="openUserModal(${u.id})">Edit</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">Remove</button>
-      </td>
-    </tr>`).join('');
 }
 
 // ==================== GOOGLE SHEETS ====================
@@ -1909,7 +1694,6 @@ async function syncToSheets(silent = false) {
     const sends = [
       { sheet: 'PM_Logs', headers: ['ID','Date','Device','PM Type','Technician','Location','Status','Next PM','Duration (min)','Actions','Findings'], rows: db.logs.map(l => [l.id, l.date, l.deviceName, l.type, l.tech, l.location, l.status, l.nextPM||'', l.duration||'', (l.actions||[]).join('; '), l.findings||'']) },
       { sheet: 'Devices', headers: ['ID','Name','Type','Brand','Model','Serial','CPU','RAM','Storage','OS','Location','User','Status','Last PM','Purchase','Warranty'], rows: db.devices.map(d => [d.id, d.name, d.type, d.brand||'', d.model||'', d.serial||'', d.cpu||'', d.ram||'', d.storage||'', d.os||'', d.location||'', d.user||'', d.status, d.lastPM||'', d.purchase||'', d.warranty||'']) },
-      { sheet: 'Users', headers: ['ID','Full Name','Department','Email','Status','Registered'], rows: db.users.map(u => [u.id, u.name, u.dept, u.email, u.status, u.registered||'']) },
       { sheet: 'Business_Units', headers: ['ID','BU Name','PM Month','Location','Technician','Contact','Device Count','Notes'], rows: db.bus.map(b => [b.id, b.name, MONTHS[b.month-1], b.location||'', b.tech||'', b.contact||'', (b.deviceIds||[]).length, b.notes||'']) },
       { sheet: 'Schedules', headers: ['ID','Device','Business Unit','Date','Type','Assigned','Status','Notes'], rows: db.schedules.map(s => [s.id, s.deviceName, s.buName||'', s.date, s.type, s.assigned||'', s.status, s.notes||'']) }
     ];
@@ -1934,10 +1718,6 @@ function exportCSV(type) {
     rows = [['Name','Email','Department','Preferred Date','Preferred Time','Device Type','Notes','Submitted At'],
             ...reqs.map(r => [r.name, r.email, r.dept, r.date, r.time, r.deviceType||'', r.notes||'', r.submittedAt||''])];
     filename = 'PM_Requests.csv';
-  }
-  if (type === 'users') {
-    rows = [['Full Name','Department','Email','Status','Registered'], ...db.users.map(u => [u.name, u.dept, u.email, u.status, u.registered||''])];
-    filename = 'Users.csv';
   }
   if (type === 'devices') {
     rows = [['Name','Type','Brand','Model','Serial','CPU','RAM','Storage','OS','Location','User','Status','Last PM'], ...db.devices.map(d => [d.name, d.type, d.brand||'', d.model||'', d.serial||'', d.cpu||'', d.ram||'', d.storage||'', d.os||'', d.location||'', d.user||'', d.status, d.lastPM||''])];
