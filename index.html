@@ -2084,6 +2084,13 @@ function rfReset() {
 // ==================== INIT ====================
 function routeByHash() {
   const hash = window.location.hash;
+
+  // Ignore hash changes caused internally by showRequestForm / hideRequestForm
+  if (hash === '#request') {
+    // Already showing form — do nothing
+    return;
+  }
+
   if (hash === '#admin') {
     sessionStorage.removeItem('pm_authed');
     document.getElementById('adminGate').style.display = 'flex';
@@ -2095,6 +2102,7 @@ function routeByHash() {
     document.getElementById('appWrap').style.display = '';
     renderDashboard();
   } else {
+    // bare URL or anything else → show the request form
     document.getElementById('adminGate').style.display = 'none';
     showRequestForm();
   }
@@ -2103,7 +2111,17 @@ function routeByHash() {
 window.addEventListener('load', function() {
   updateGSStatus(db.gsConnected);
   updateRequestBadge();
-  routeByHash();
+  // On initial load, treat #request same as no hash — show the form
+  if (window.location.hash === '#admin') {
+    routeByHash();
+  } else if (sessionStorage.getItem('pm_authed') === '1') {
+    document.getElementById('adminGate').style.display = 'none';
+    document.getElementById('appWrap').style.display = '';
+    renderDashboard();
+  } else {
+    document.getElementById('adminGate').style.display = 'none';
+    showRequestForm();
+  }
 });
 
 window.addEventListener('hashchange', routeByHash);
