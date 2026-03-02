@@ -695,155 +695,162 @@
 <!-- TOAST -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- MODAL: PM LOG -->
-<div class="modal-overlay" id="logModal">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="logModalTitle">New PM Log</div>
-      <button class="modal-close" onclick="closeModal('logModal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Date *</label>
-          <input type="date" id="lDate">
-        </div>
-        <div class="form-group">
-          <label>Device *</label>
-          <select id="lDevice"><option value="">-- Select Device --</option></select>
-        </div>
-        <div class="form-group">
-          <label>PM Type *</label>
-          <select id="lType">
-            <option>Routine PM</option><option>Deep Clean</option><option>Hardware Check</option>
-            <option>Software Update</option><option>Full PM</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Technician *</label>
-          <input type="text" id="lTech" placeholder="Technician name">
-        </div>
-        <div class="form-group">
-          <label>Location</label>
-          <select id="lLocation"><option>Onsite</option><option>Offsite</option></select>
-        </div>
-        <div class="form-group">
-          <label>Status</label>
-          <select id="lStatus"><option>Completed</option><option>In Progress</option><option>Pending</option></select>
-        </div>
-        <div class="form-group">
-          <label>Next PM Date</label>
-          <input type="date" id="lNextPM">
-        </div>
-        <div class="form-group">
-          <label>Duration (mins)</label>
-          <input type="number" id="lDuration" placeholder="e.g. 45">
-        </div>
-        <div class="form-group span2">
-          <label>Actions Performed</label>
-          <div class="checkbox-row" id="actionsChecklist">
-            <label class="checkbox-item"><input type="checkbox" value="Dust cleaning"> Dust cleaning</label>
-            <label class="checkbox-item"><input type="checkbox" value="Thermal paste"> Thermal paste</label>
-            <label class="checkbox-item"><input type="checkbox" value="OS update"> OS update</label>
-            <label class="checkbox-item"><input type="checkbox" value="Antivirus scan"> Antivirus scan</label>
-            <label class="checkbox-item"><input type="checkbox" value="Disk check"> Disk check</label>
-            <label class="checkbox-item"><input type="checkbox" value="RAM check"> RAM check</label>
-            <label class="checkbox-item"><input type="checkbox" value="Driver update"> Driver update</label>
-            <label class="checkbox-item"><input type="checkbox" value="BIOS check"> BIOS check</label>
-          </div>
-        </div>
-        <div class="form-group span2">
-          <label>Findings / Remarks</label>
-          <textarea id="lFindings" placeholder="Describe what was found or done..."></textarea>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('logModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveLog()">Save Log</button>
-    </div>
-  </div>
-</div>
-
-
-<!-- MODAL: ADD / EDIT USER (admin) -->
-<!-- MODAL: DEVICE -->
+<!-- MODAL: COMBINED DEVICE + PM LOG -->
 <div class="modal-overlay" id="deviceModal">
-  <div class="modal">
+  <div class="modal" style="max-width:680px;">
     <div class="modal-header">
       <div class="modal-title" id="devModalTitle">Add Device</div>
-      <button class="modal-close" onclick="closeModal('deviceModal')">✕</button>
+      <button class="modal-close" onclick="closeCombinedModal()">✕</button>
     </div>
+
+    <!-- TABS -->
+    <div class="tabs" style="padding:0 22px;border-bottom:1px solid var(--border);margin-bottom:0;">
+      <div class="tab active" id="tabDevice" onclick="switchModalTab('device')" style="padding:12px 16px;">🖥️ Device Info</div>
+      <div class="tab" id="tabLog" onclick="switchModalTab('log')" style="padding:12px 16px;">📋 PM Log</div>
+    </div>
+
     <div class="modal-body">
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Device Name *</label>
-          <input type="text" id="dName" placeholder="e.g. PC-ADMIN-01">
-        </div>
-        <div class="form-group">
-          <label>Type *</label>
-          <select id="dType"><option>Desktop</option><option>Laptop</option></select>
-        </div>
-        <div class="form-group">
-          <label>Brand</label>
-          <input type="text" id="dBrand" placeholder="e.g. Dell, HP, Lenovo">
-        </div>
-        <div class="form-group">
-          <label>Model</label>
-          <input type="text" id="dModel" placeholder="e.g. OptiPlex 7080">
-        </div>
-        <div class="form-group">
-          <label>Serial Number</label>
-          <input type="text" id="dSerial" placeholder="Serial number">
-        </div>
-        <div class="form-group">
-          <label>Processor</label>
-          <input type="text" id="dCPU" placeholder="e.g. Intel i5-10th Gen">
-        </div>
-        <div class="form-group">
-          <label>RAM</label>
-          <input type="text" id="dRAM" placeholder="e.g. 8GB DDR4">
-        </div>
-        <div class="form-group">
-          <label>Storage</label>
-          <input type="text" id="dStorage" placeholder="e.g. 256GB SSD">
-        </div>
-        <div class="form-group">
-          <label>OS</label>
-          <input type="text" id="dOS" placeholder="e.g. Windows 11 Pro">
-        </div>
-        <div class="form-group">
-          <label>Location / Department</label>
-          <input type="text" id="dLocation" placeholder="e.g. IT Dept, 2nd Floor">
-        </div>
-        <div class="form-group">
-          <label>Assigned User</label>
-          <input type="text" id="dUser" placeholder="User's name">
-        </div>
-        <div class="form-group">
-          <label>Status</label>
-          <select id="dStatus"><option>Active</option><option>Under Repair</option><option>Retired</option></select>
-        </div>
-        <div class="form-group">
-          <label>Purchase Date</label>
-          <input type="date" id="dPurchase">
-        </div>
-        <div class="form-group">
-          <label>Warranty Expiry</label>
-          <input type="date" id="dWarranty">
-        </div>
-        <div class="form-group span2">
-          <label>Notes</label>
-          <textarea id="dNotes" placeholder="Additional notes..."></textarea>
+
+      <!-- DEVICE TAB -->
+      <div id="modalTabDevice">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Device Name *</label>
+            <input type="text" id="dName" placeholder="e.g. PC-ADMIN-01">
+          </div>
+          <div class="form-group">
+            <label>Type *</label>
+            <select id="dType"><option>Desktop</option><option>Laptop</option></select>
+          </div>
+          <div class="form-group">
+            <label>Brand</label>
+            <input type="text" id="dBrand" placeholder="e.g. Dell, HP, Lenovo">
+          </div>
+          <div class="form-group">
+            <label>Model</label>
+            <input type="text" id="dModel" placeholder="e.g. OptiPlex 7080">
+          </div>
+          <div class="form-group">
+            <label>Serial Number</label>
+            <input type="text" id="dSerial" placeholder="Serial number">
+          </div>
+          <div class="form-group">
+            <label>Processor</label>
+            <input type="text" id="dCPU" placeholder="e.g. Intel i5-10th Gen">
+          </div>
+          <div class="form-group">
+            <label>RAM</label>
+            <input type="text" id="dRAM" placeholder="e.g. 8GB DDR4">
+          </div>
+          <div class="form-group">
+            <label>Storage</label>
+            <input type="text" id="dStorage" placeholder="e.g. 256GB SSD">
+          </div>
+          <div class="form-group">
+            <label>OS</label>
+            <input type="text" id="dOS" placeholder="e.g. Windows 11 Pro">
+          </div>
+          <div class="form-group">
+            <label>Location / Department</label>
+            <input type="text" id="dLocation" placeholder="e.g. IT Dept, 2nd Floor">
+          </div>
+          <div class="form-group">
+            <label>Assigned User</label>
+            <input type="text" id="dUser" placeholder="User's name">
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="dStatus"><option>Active</option><option>Under Repair</option><option>Retired</option></select>
+          </div>
+          <div class="form-group">
+            <label>Purchase Date</label>
+            <input type="date" id="dPurchase">
+          </div>
+          <div class="form-group">
+            <label>Warranty Expiry</label>
+            <input type="date" id="dWarranty">
+          </div>
+          <div class="form-group span2">
+            <label>Notes</label>
+            <textarea id="dNotes" placeholder="Additional notes..."></textarea>
+          </div>
         </div>
       </div>
+
+      <!-- PM LOG TAB -->
+      <div id="modalTabLog" style="display:none;">
+        <div id="logNoDevice" style="display:none;text-align:center;padding:32px;color:var(--text2);font-size:13px;">
+          ⚠️ Save the device first before adding a PM log.
+        </div>
+        <div id="logFormContent">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Date *</label>
+              <input type="date" id="lDate">
+            </div>
+            <div class="form-group">
+              <label>Device</label>
+              <select id="lDevice"><option value="">-- Select Device --</option></select>
+            </div>
+            <div class="form-group">
+              <label>PM Type *</label>
+              <select id="lType">
+                <option>Routine PM</option><option>Deep Clean</option><option>Hardware Check</option>
+                <option>Software Update</option><option>Full PM</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Technician *</label>
+              <input type="text" id="lTech" placeholder="Technician name">
+            </div>
+            <div class="form-group">
+              <label>Location</label>
+              <select id="lLocation"><option>Onsite</option><option>Offsite</option></select>
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select id="lStatus"><option>Completed</option><option>In Progress</option><option>Pending</option></select>
+            </div>
+            <div class="form-group">
+              <label>Next PM Date</label>
+              <input type="date" id="lNextPM">
+            </div>
+            <div class="form-group">
+              <label>Duration (mins)</label>
+              <input type="number" id="lDuration" placeholder="e.g. 45">
+            </div>
+            <div class="form-group span2">
+              <label>Actions Performed</label>
+              <div class="checkbox-row" id="actionsChecklist">
+                <label class="checkbox-item"><input type="checkbox" value="Dust cleaning"> Dust cleaning</label>
+                <label class="checkbox-item"><input type="checkbox" value="Thermal paste"> Thermal paste</label>
+                <label class="checkbox-item"><input type="checkbox" value="OS update"> OS update</label>
+                <label class="checkbox-item"><input type="checkbox" value="Antivirus scan"> Antivirus scan</label>
+                <label class="checkbox-item"><input type="checkbox" value="Disk check"> Disk check</label>
+                <label class="checkbox-item"><input type="checkbox" value="RAM check"> RAM check</label>
+                <label class="checkbox-item"><input type="checkbox" value="Driver update"> Driver update</label>
+                <label class="checkbox-item"><input type="checkbox" value="BIOS check"> BIOS check</label>
+              </div>
+            </div>
+            <div class="form-group span2">
+              <label>Findings / Remarks</label>
+              <textarea id="lFindings" placeholder="Describe what was found or done..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('deviceModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveDevice()">Save Device</button>
+
+    <div class="modal-footer" id="combinedModalFooter">
+      <button class="btn btn-secondary" onclick="closeCombinedModal()">Cancel</button>
+      <button class="btn btn-primary" id="combinedSaveBtn" onclick="saveCombined()">Save Device</button>
     </div>
   </div>
 </div>
+
+<!-- keep logModal as alias -->
+<div id="logModal"></div>
 
 <!-- MODAL: BUSINESS UNIT -->
 <div class="modal-overlay" id="buModal">
@@ -992,6 +999,86 @@ let db = {
   gsConnected: localStorage.getItem('pm_gsConnected') === 'true'
 };
 let editingLog = null, editingDevice = null;
+let activeModalTab = 'device';
+
+function switchModalTab(tab) {
+  activeModalTab = tab;
+  document.getElementById('modalTabDevice').style.display = tab === 'device' ? '' : 'none';
+  document.getElementById('modalTabLog').style.display    = tab === 'log'    ? '' : 'none';
+  document.getElementById('tabDevice').classList.toggle('active', tab === 'device');
+  document.getElementById('tabLog').classList.toggle('active',    tab === 'log');
+
+  const saveBtn = document.getElementById('combinedSaveBtn');
+  if (tab === 'device') {
+    saveBtn.textContent = editingDevice ? 'Update Device' : 'Save Device';
+  } else {
+    saveBtn.textContent = editingLog ? 'Update Log' : 'Save Log';
+    // populate device dropdown
+    const sel = document.getElementById('lDevice');
+    sel.innerHTML = '<option value="">-- Select Device --</option>' + db.devices.map(d =>
+      `<option value="${d.id}" ${editingLog && db.logs.find(l=>l.id==editingLog)?.deviceId==d.id ? 'selected' : ''}>${d.name}</option>`
+    ).join('');
+    // If we just saved a device, pre-select it
+    if (editingDevice) {
+      sel.value = editingDevice;
+    }
+    // Show/hide warning
+    const hasDevices = db.devices.length > 0;
+    document.getElementById('logNoDevice').style.display   = hasDevices ? 'none'  : 'block';
+    document.getElementById('logFormContent').style.display = hasDevices ? 'block' : 'none';
+  }
+}
+
+function openCombinedModal(deviceId = null, logId = null, startTab = 'device') {
+  editingDevice = deviceId;
+  editingLog    = logId;
+
+  // Fill device fields
+  const d = deviceId ? db.devices.find(x => x.id == deviceId) : null;
+  document.getElementById('devModalTitle').textContent = deviceId ? 'Edit Device' : 'Add Device';
+  ['Name','Brand','Model','Serial','CPU','RAM','Storage','OS','Location','User','Notes'].forEach(f => {
+    document.getElementById('d' + f).value = d ? (d[f.toLowerCase()] || '') : '';
+  });
+  document.getElementById('dType').value    = d ? d.type    : 'Desktop';
+  document.getElementById('dStatus').value  = d ? d.status  : 'Active';
+  document.getElementById('dPurchase').value = d ? (d.purchase || '') : '';
+  document.getElementById('dWarranty').value = d ? (d.warranty  || '') : '';
+
+  // Fill log fields
+  const log = logId ? db.logs.find(l => l.id == logId) : null;
+  document.getElementById('lDate').value     = log ? log.date     : new Date().toISOString().split('T')[0];
+  document.getElementById('lTech').value     = log ? log.tech     : '';
+  document.getElementById('lType').value     = log ? log.type     : 'Routine PM';
+  document.getElementById('lLocation').value = log ? log.location : 'Onsite';
+  document.getElementById('lStatus').value   = log ? log.status   : 'Completed';
+  document.getElementById('lNextPM').value   = log ? log.nextPM   : '';
+  document.getElementById('lDuration').value = log ? log.duration : '';
+  document.getElementById('lFindings').value = log ? log.findings : '';
+  document.querySelectorAll('#actionsChecklist input[type=checkbox]').forEach(cb => {
+    cb.checked = log ? (log.actions || []).includes(cb.value) : false;
+  });
+
+  switchModalTab(startTab);
+  openModal('deviceModal');
+}
+
+function openDeviceModal(id = null) { openCombinedModal(id, null, 'device'); }
+function openLogModal(id = null)    {
+  editingLog = id;
+  const log  = id ? db.logs.find(l => l.id == id) : null;
+  openCombinedModal(log ? log.deviceId : null, id, 'log');
+}
+
+function closeCombinedModal() {
+  closeModal('deviceModal');
+  editingDevice = null;
+  editingLog    = null;
+}
+
+function saveCombined() {
+  if (activeModalTab === 'device') saveDevice();
+  else saveLog();
+}
 
 function save() {
   localStorage.setItem('pm_devices', JSON.stringify(db.devices));
@@ -1087,7 +1174,7 @@ function saveLog() {
   // Update device last PM
   if (device) { device.lastPM = date; save(); }
   save();
-  closeModal('logModal');
+  closeCombinedModal();
   toast(editingLog ? 'Log updated!' : 'PM Log saved!', 'success');
   renderLogs(); renderDashboard();
   if (db.gsConnected) syncToSheets(true);
@@ -1114,13 +1201,19 @@ function saveDevice() {
     notes: document.getElementById('dNotes').value,
     lastPM: editingDevice ? (db.devices.find(x=>x.id==editingDevice)||{}).lastPM : ''
   };
+  const wasNew = !editingDevice;
   if (editingDevice) { const i = db.devices.findIndex(d => d.id == editingDevice); db.devices[i] = device; }
-  else db.devices.push(device);
+  else { db.devices.push(device); editingDevice = device.id; }
   save();
-  closeModal('deviceModal');
-  toast(editingDevice ? 'Device updated!' : 'Device added!', 'success');
+  toast(editingDevice ? 'Device saved! You can now add a PM Log.' : 'Device updated!', 'success');
   renderDevices(); renderDashboard();
   if (db.gsConnected) syncToSheets(true);
+  // If new device, switch to log tab so user can log PM right away
+  if (wasNew) {
+    switchModalTab('log');
+  } else {
+    closeCombinedModal();
+  }
 }
 
 function saveSchedule() {
