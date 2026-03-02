@@ -2080,29 +2080,31 @@ function rfReset() {
 
 
 // ==================== INIT ====================
-// Wrap in DOMContentLoaded so all HTML elements exist before we touch them
-document.addEventListener('DOMContentLoaded', function() {
-  updateGSStatus(db.gsConnected);
-  updateRequestBadge();
-
-  if (window.location.hash === '#admin') {
-    // Explicitly show the gate, hide everything else
+function routeByHash() {
+  const hash = window.location.hash;
+  if (hash === '#admin') {
     sessionStorage.removeItem('pm_authed');
     document.getElementById('adminGate').style.display = 'flex';
     document.getElementById('appWrap').style.display = 'none';
     document.getElementById('requestFormOverlay').classList.remove('open');
-    document.getElementById('gatePassword').focus();
+    setTimeout(() => document.getElementById('gatePassword').focus(), 100);
   } else if (sessionStorage.getItem('pm_authed') === '1') {
-    // Already authenticated this session
     document.getElementById('adminGate').style.display = 'none';
     document.getElementById('appWrap').style.display = '';
     renderDashboard();
   } else {
-    // Everyone else: show request form directly
     document.getElementById('adminGate').style.display = 'none';
     showRequestForm();
   }
+}
+
+window.addEventListener('load', function() {
+  updateGSStatus(db.gsConnected);
+  updateRequestBadge();
+  routeByHash();
 });
+
+window.addEventListener('hashchange', routeByHash);
 
 
 </script>
