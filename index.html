@@ -972,52 +972,77 @@
 
 <!-- MODAL: GOOGLE SHEETS SETUP -->
 <div class="modal-overlay" id="gsModal">
-  <div class="modal">
+  <div class="modal" style="max-width:600px;">
     <div class="modal-header">
-      <div class="modal-title">⚡ Google Sheets Integration Setup</div>
+      <div class="modal-title">⚡ Google Sheets Setup</div>
       <button class="modal-close" onclick="closeModal('gsModal')">✕</button>
     </div>
-    <div class="modal-body">
-      <p style="font-size:13px;color:var(--text2);margin-bottom:18px;">Connect to Google Sheets so all PM data syncs automatically. Follow these steps:</p>
+    <div class="modal-body" style="padding:0;">
 
-      <div class="gs-step-row">
-        <div class="gs-step-num">1</div>
-        <div class="gs-step-content">
-          <div class="gs-step-title">Create a Google Sheet</div>
-          <div class="gs-step-desc">Go to <strong>sheets.google.com</strong> and create a new spreadsheet. Name it "PM Tracker". Create 3 sheets (tabs): <strong>PM_Logs</strong>, <strong>Devices</strong>, <strong>Schedules</strong>.</div>
-        </div>
+      <!-- STATUS BAR -->
+      <div id="gsStatusBanner" style="padding:12px 22px;font-size:13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <span id="gsStatusBannerText" style="display:flex;align-items:center;gap:8px;"></span>
+        <button id="gsDisconnectBtn" onclick="disconnectGS()" style="display:none;background:none;border:1px solid var(--danger);color:var(--danger);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:var(--sans);">Disconnect</button>
       </div>
 
-      <div class="gs-step-row">
-        <div class="gs-step-num">2</div>
-        <div class="gs-step-content">
-          <div class="gs-step-title">Create an Apps Script Web App</div>
-          <div class="gs-step-desc">In your Google Sheet, go to <strong>Extensions → Apps Script</strong>. Delete the default code and paste the script below. Click <strong>Deploy → New deployment → Web app</strong>. Set "Who has access" to <strong>Anyone</strong>. Copy the Web App URL.</div>
-          <div class="code-block" id="appsScriptCode">Loading script...</div>
-          <button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="copyScript()">📋 Copy Script</button>
-        </div>
-      </div>
+      <div style="padding:20px 22px;">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.7;">
+          Follow these 4 steps to sync all PM data to Google Sheets automatically.
+        </p>
 
-      <div class="gs-step-row">
-        <div class="gs-step-num">3</div>
-        <div class="gs-step-content">
-          <div class="gs-step-title">Paste Your Web App URL</div>
-          <div class="gs-step-desc">After deploying, paste the Web App URL below.</div>
-          <input type="text" id="gsURL" placeholder="https://script.google.com/macros/s/..." style="margin-top:8px;" value="">
+        <!-- STEP 1 -->
+        <div class="gs-step-row">
+          <div class="gs-step-num">1</div>
+          <div class="gs-step-content">
+            <div class="gs-step-title">Create a Google Sheet</div>
+            <div class="gs-step-desc">Go to <a href="https://sheets.google.com" target="_blank" style="color:var(--accent);">sheets.google.com</a> and create a new spreadsheet. Name it <strong>PM Tracker</strong>. The script will auto-create all needed sheet tabs.</div>
+          </div>
         </div>
-      </div>
 
-      <div class="gs-step-row">
-        <div class="gs-step-num">4</div>
-        <div class="gs-step-content">
-          <div class="gs-step-title">Test Connection</div>
-          <div class="gs-step-desc">Click "Test & Save" to verify the connection.</div>
+        <!-- STEP 2 -->
+        <div class="gs-step-row">
+          <div class="gs-step-num">2</div>
+          <div class="gs-step-content">
+            <div class="gs-step-title">Open Apps Script</div>
+            <div class="gs-step-desc">In your Google Sheet, click <strong>Extensions → Apps Script</strong>. Delete all existing code, then paste the script below.</div>
+            <div class="code-block" id="appsScriptCode" style="margin-top:10px;max-height:140px;overflow-y:auto;font-size:11px;">Loading...</div>
+            <button class="btn btn-secondary" style="margin-top:8px;font-size:12px;padding:6px 12px;" onclick="copyScript()">📋 Copy Script</button>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="gs-step-row">
+          <div class="gs-step-num">3</div>
+          <div class="gs-step-content">
+            <div class="gs-step-title">Deploy as Web App</div>
+            <div class="gs-step-desc">
+              In Apps Script, click <strong>Deploy → New deployment</strong>.<br>
+              • Type: <strong>Web app</strong><br>
+              • Execute as: <strong>Me</strong><br>
+              • Who has access: <strong>Anyone</strong><br>
+              Click <strong>Deploy</strong>, authorize when prompted, then copy the <strong>Web App URL</strong>.
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="gs-step-row" style="border-bottom:none;padding-bottom:0;">
+          <div class="gs-step-num">4</div>
+          <div class="gs-step-content">
+            <div class="gs-step-title">Paste Web App URL & Connect</div>
+            <div class="gs-step-desc">Paste the Web App URL below and click <strong>Connect</strong>.</div>
+            <div style="display:flex;gap:8px;margin-top:10px;">
+              <input type="text" id="gsURL" placeholder="https://script.google.com/macros/s/..." style="flex:1;">
+              <button class="btn btn-primary" onclick="saveGSConfig()" id="gsConnectBtn" style="white-space:nowrap;">Connect</button>
+            </div>
+            <div id="gsURLError" style="font-size:12px;color:var(--danger);margin-top:6px;display:none;"></div>
+          </div>
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('gsModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveGSConfig()">Test & Save Connection</button>
+      <button class="btn btn-secondary" onclick="closeModal('gsModal')">Close</button>
+      <button class="btn btn-primary" id="gsSyncNowBtn" onclick="syncToSheets()" style="display:none;">↑ Sync Now</button>
     </div>
   </div>
 </div>
@@ -2030,94 +2055,150 @@ const appsScript = `function doPost(e) {
   var data = JSON.parse(e.postData.contents);
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(data.sheet);
-
-  if (!sheet) {
-    sheet = ss.insertSheet(data.sheet);
-  }
-
+  if (!sheet) { sheet = ss.insertSheet(data.sheet); }
   if (data.action === 'clear_and_write') {
     sheet.clearContents();
-
-    if (data.headers) {
-      sheet.appendRow(data.headers);
-    }
-
-    (data.rows || []).forEach(function(row) {
-      sheet.appendRow(row);
-    });
+    if (data.headers) { sheet.appendRow(data.headers); }
+    (data.rows || []).forEach(function(row) { sheet.appendRow(row); });
   }
-
-  return ContentService
-    .createTextOutput(JSON.stringify({ status: 'ok' }))
+  return ContentService.createTextOutput(JSON.stringify({ status: 'ok' }))
     .setMimeType(ContentService.MimeType.JSON);
 }
-
 function doGet(e) {
-  return ContentService
-    .createTextOutput(JSON.stringify({ status: 'ready' }))
+  return ContentService.createTextOutput(JSON.stringify({ status: 'ready' }))
     .setMimeType(ContentService.MimeType.JSON);
 }`;
 
-document.getElementById('appsScriptCode').textContent = appsScript;
-
 function copyScript() {
-  navigator.clipboard.writeText(appsScript).then(() => toast('Script copied to clipboard!', 'success'));
+  navigator.clipboard.writeText(appsScript)
+    .then(() => toast('Script copied! Paste it in Apps Script.', 'success'))
+    .catch(() => {
+      // Fallback for browsers that block clipboard
+      const el = document.createElement('textarea');
+      el.value = appsScript;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      toast('Script copied!', 'success');
+    });
 }
 
 function openGSModal() {
+  // Populate script code block
+  document.getElementById('appsScriptCode').textContent = appsScript;
+  // Populate URL field
   document.getElementById('gsURL').value = db.gsURL || '';
+  document.getElementById('gsURLError').style.display = 'none';
+  // Update status banner
+  updateGSModalBanner();
   openModal('gsModal');
 }
 
+function updateGSModalBanner() {
+  const banner = document.getElementById('gsStatusBanner');
+  const text   = document.getElementById('gsStatusBannerText');
+  const discBtn = document.getElementById('gsDisconnectBtn');
+  const syncBtn = document.getElementById('gsSyncNowBtn');
+  const connectBtn = document.getElementById('gsConnectBtn');
+
+  if (db.gsConnected) {
+    banner.style.background = 'rgba(0,212,170,0.08)';
+    banner.style.borderColor = 'rgba(0,212,170,0.2)';
+    text.innerHTML = '<span style="color:var(--accent)">✅ Connected</span> — Data syncs to Google Sheets automatically.';
+    discBtn.style.display = '';
+    syncBtn.style.display = '';
+    connectBtn.textContent = 'Reconnect';
+  } else {
+    banner.style.background = 'rgba(255,255,255,0.03)';
+    banner.style.borderColor = 'var(--border)';
+    text.innerHTML = '<span style="color:var(--text3)">⚪ Not connected</span> — Follow the steps below to connect.';
+    discBtn.style.display = 'none';
+    syncBtn.style.display = 'none';
+    connectBtn.textContent = 'Connect';
+  }
+}
+
 async function saveGSConfig() {
-  const url = document.getElementById('gsURL').value.trim();
-  if (!url) { toast('Please enter a Web App URL.', 'error'); return; }
+  const url    = document.getElementById('gsURL').value.trim();
+  const errEl  = document.getElementById('gsURLError');
+  const btn    = document.getElementById('gsConnectBtn');
+  errEl.style.display = 'none';
+
+  if (!url) { errEl.textContent = 'Please paste your Web App URL.'; errEl.style.display = 'block'; return; }
   if (!url.startsWith('https://script.google.com/macros/s/')) {
-    toast('URL must start with https://script.google.com/macros/s/...', 'error');
+    errEl.textContent = 'URL must start with https://script.google.com/macros/s/...';
+    errEl.style.display = 'block';
     return;
   }
-  toast('Saving connection...', 'info');
+
+  btn.textContent = 'Connecting...';
+  btn.disabled = true;
+
   try {
-    // CORS blocks reading the response, but a real network error still throws.
-    // As long as the fetch doesn't throw, the URL domain is valid.
     await fetch(url, { method: 'GET', mode: 'no-cors' });
   } catch (err) {
-    toast('Network error. Make sure you are online.', 'error');
+    btn.textContent = 'Connect';
+    btn.disabled = false;
+    errEl.textContent = 'Network error — make sure you are online.';
+    errEl.style.display = 'block';
     return;
   }
+
   db.gsURL = url;
   db.gsConnected = true;
   localStorage.setItem('pm_gsURL', url);
   localStorage.setItem('pm_gsConnected', 'true');
   updateGSStatus(true);
-  closeModal('gsModal');
-  toast('Google Sheets connected! ✅', 'success');
+  updateGSModalBanner();
+  btn.textContent = 'Connected ✅';
+  setTimeout(() => { btn.textContent = 'Reconnect'; btn.disabled = false; }, 2000);
+  toast('Google Sheets connected! Syncing data...', 'success');
+  syncToSheets(true);
+}
+
+function disconnectGS() {
+  if (!confirm('Disconnect Google Sheets? You can reconnect anytime.')) return;
+  db.gsURL = '';
+  db.gsConnected = false;
+  localStorage.removeItem('pm_gsURL');
+  localStorage.removeItem('pm_gsConnected');
+  updateGSStatus(false);
+  updateGSModalBanner();
+  document.getElementById('gsURL').value = '';
+  toast('Google Sheets disconnected.', 'info');
 }
 
 function updateGSStatus(connected) {
+  db.gsConnected = connected;
   document.getElementById('gsDot').className = 'gs-status-dot ' + (connected ? 'connected' : 'disconnected');
   document.getElementById('gsStatusText').textContent = connected ? 'Sheets connected' : 'Not connected';
+  // Make the sidebar status clickable to open the modal
+  document.getElementById('gsStatusBar').style.cursor = 'pointer';
+  document.getElementById('gsStatusBar').onclick = openGSModal;
 }
 
 async function syncToSheets(silent = false) {
   if (!db.gsConnected || !db.gsURL) {
-    if (!silent) { toast('Connect to Google Sheets first!', 'error'); openGSModal(); }
+    if (!silent) { toast('Connect to Google Sheets first.', 'error'); openGSModal(); }
     return;
   }
-  if (!silent) { document.getElementById('syncIcon').innerHTML = '<span class="spinner"></span>'; }
+  const syncEl = document.getElementById('syncIcon');
+  if (!silent && syncEl) syncEl.innerHTML = '<span class="spinner"></span>';
   try {
     const sends = [
-      { sheet: 'PM_Logs', headers: ['ID','Date','Device','PM Type','Technician','Location','Status','Next PM','Duration (min)','Actions','Findings'], rows: db.logs.map(l => [l.id, l.date, l.deviceName, l.type, l.tech, l.location, l.status, l.nextPM||'', l.duration||'', (l.actions||[]).join('; '), l.findings||'']) },
-      { sheet: 'Devices', headers: ['ID','Name','Type','Brand','Model','Serial','CPU','RAM','Storage','OS','Location','User','Status','Last PM','Purchase','Warranty'], rows: db.devices.map(d => [d.id, d.name, d.type, d.brand||'', d.model||'', d.serial||'', d.cpu||'', d.ram||'', d.storage||'', d.os||'', d.location||'', d.user||'', d.status, d.lastPM||'', d.purchase||'', d.warranty||'']) },
-      { sheet: 'Business_Units', headers: ['ID','BU Name','PM Month','Location','Technician','Contact','Device Count','Notes'], rows: db.bus.map(b => [b.id, b.name, MONTHS[b.month-1], b.location||'', b.tech||'', b.contact||'', (b.deviceIds||[]).length, b.notes||'']) },
-      { sheet: 'Schedules', headers: ['ID','Device','Business Unit','Date','Type','Assigned','Status','Notes'], rows: db.schedules.map(s => [s.id, s.deviceName, s.buName||'', s.date, s.type, s.assigned||'', s.status, s.notes||'']) }
+      { sheet: 'PM_Logs',       headers: ['ID','Date','Device','PM Type','Technician','Location','Status','Next PM','Duration (min)','Actions','Findings'],            rows: db.logs.map(l =>     [l.id, l.date, l.deviceName, l.type, l.tech, l.location, l.status, l.nextPM||'', l.duration||'', (l.actions||[]).join('; '), l.findings||'']) },
+      { sheet: 'Devices',       headers: ['ID','Name','Type','Brand','Model','Serial','CPU','RAM','Storage','OS','Location','User','Status','Last PM','Purchase','Warranty'], rows: db.devices.map(d => [d.id, d.name, d.type, d.brand||'', d.model||'', d.serial||'', d.cpu||'', d.ram||'', d.storage||'', d.os||'', d.location||'', d.user||'', d.status, d.lastPM||'', d.purchase||'', d.warranty||'']) },
+      { sheet: 'Business_Units',headers: ['ID','BU Name','PM Month','Location','Contact','Notes'],                                                                        rows: db.bus.map(b =>      [b.id, b.name, MONTHS[b.month-1], b.location||'', b.contact||'', b.notes||'']) },
+      { sheet: 'Schedules',     headers: ['ID','Device','Date','Type','Assigned','Status','Notes'],                                                                       rows: db.schedules.map(s => [s.id, s.deviceName||'', s.date, s.type, s.assigned||'', s.status, s.notes||'']) },
+      { sheet: 'PM_Requests',   headers: ['Name','Email','Department','Preferred Date','Preferred Time','Device Type','Notes','Submitted At'],                           rows: (JSON.parse(localStorage.getItem('pm_requests')||'[]')).map(r => [r.name, r.email, r.dept, r.date, r.time, r.deviceType||'', r.notes||'', r.submittedAt||'']) }
     ];
     for (const payload of sends) {
       await fetch(db.gsURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'clear_and_write', ...payload }) });
     }
-    if (!silent) { document.getElementById('syncIcon').textContent = '↑'; toast('Synced to Google Sheets! ✅', 'success'); }
+    if (!silent && syncEl) { syncEl.textContent = '↑'; toast('Synced to Google Sheets ✅', 'success'); }
   } catch (err) {
-    if (!silent) { document.getElementById('syncIcon').textContent = '↑'; toast('Sync failed. Check connection.', 'error'); }
+    if (!silent && syncEl) { syncEl.textContent = '↑'; toast('Sync failed. Check your connection.', 'error'); }
   }
 }
 
